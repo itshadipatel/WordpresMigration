@@ -1,0 +1,87 @@
+We will first create a sql file for our new website and then compress the public folder in which we have our wordpress files.
+
+1> Go to your domain public folder and export the database using following command
+
+mysqldump -u USERNAME -p DATABASR_NAME > OLD_DOMAIN_SQL.sql
+you will be be asked to enter password 
+
+
+2> Generate a backup sql file before making any changes on it
+cp OLD_DOMAIN_SQL.sql SQL_FOR_NEW_DOMAIN.sql
+
+
+3> make sure you are in PUBLIC folder of your website (using pwd)
+
+IF THE NEW DOMAIN NAME IS SAME AS OLD THEN SKIP STEP 4 and 5. 
+
+4> replace the OLD_DOMAIN.com with NEW_DOMAIN.com 
+sed -i -e 's/OLD_DOMAIN.com/NEW_DOMAIN.com/g' SQL_FOR_NEW_DOMAIN.sql
+
+
+5> crosscheck if OLD_DOMAIN.com is still there in new sql file using
+
+grep "OLD_DOMAIN.com" SQL_FOR_NEW_DOMAIN.sql (IF there then it will print text and you need to replace it with new domain using above sed command)
+
+
+6> So Now we have sql file in our public folder where we have our wordpress too, we will create a tar file to download it on our new server.
+
+tar [options] [archive-file] [file or directory to be archived]
+
+tar -cfzv OLD_DOMAIN_PUBLIC.tar.gz /path/to/public
+-c : Creates archive
+-f : creates archive with given filename
+-v : Displays verbose information
+-z : compresses the tar file using gzip
+
+note:- here, we are compressing the public folder so when we extract the tar it will create the public folder. 
+
+If you want to exclude any folder in the public directory then use exculed in tar command,
+
+tar --exclude='pathtofirst/folder' --exclude='./pathtosecond/folder2' cfzv OLD_DOMAIN_PUBLIC.tar.gz /directorytobecompressed
+
+--exclude='./folder' --exclude='./upload/folder2'
+
+
+7> Now download the newly created tar on the new server (make sure the tar file is inside the public folder of old server)
+
+download it on new server using wget 
+
+wget "http://old_domain_name/OLD_DOMAIN_PUBLIC.tar.gz"
+
+8> After file is downloaded on the new server, extract the public folder (DO NOT DELETE THE TAR FILE YET, IF ANY SHIT GOES DOWN YOU STILL HAVE THE BACKUP)
+if there is already a public folder then rename it for now as a backup
+
+mv public/ public_BK_Date/
+
+tar -xzfv /path_to_outside_public_directory/OLD_DOMAIN_PUBLIC.tar.gz
+
+
+After extracting it will create a public folder
+
+9> Now goto public folder where we have sql file to be imported 
+
+import SQL_FOR_NEW_DOMAIN.sql file to NEW_DOMAIN database
+mysql -u USERNAME -p DATABASE_OF_NEW_SERVER < SQL_FOR_NEW_DOMAIN.sql
+ENTER PASSWORD
+
+IF THE FILE IS OF LARGE SIZE IT WILL TAKE TIME.
+
+
+TO be sure if Files are Imported Go to mysql using command,
+mysql -u USERNAME -p DATABASE 
+
+display the databases for logged in USER
+show databases;
+
+TO Query any of the databases  make it in use
+use DATABASE_NAME;
+
+show the tables of used Databases,
+show tables;
+
+IF tables are displayed then all good else 
+
+
+AND AT LAST 
+
+CHANGE THE WP-CONFIG.PHP DATABASE CREDENTIALS WITH NEW DATABASE
